@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+@import "react-quill-new/dist/quill.snow.css";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+.quill {
+  @apply bg-gray-50/50 rounded-xl border border-gray-100 transition-all;
+}
+
+.ql-toolbar.ql-snow {
+  @apply border-none bg-gray-50 rounded-t-xl mb-0 px-4 py-3;
+}
+
+.ql-container.ql-snow {
+  @apply border-none min-h-[300px] font-sans text-base text-gray-700;
+}
+
+.ql-editor {
+  @apply min-h-[300px] px-6 py-4;
+}
+
+.quill:focus-within {
+  @apply bg-white border-indigo-500 ring-4 ring-indigo-500/10;
+}
+
+/* Custom styles for rendered modules */
+.module-content, .markdown-body {
+  @apply prose prose-slate max-w-none text-slate-600 leading-relaxed font-sans w-full overflow-x-hidden;
+}
+
+.module-content h1, .markdown-body h1 { @apply text-3xl font-bold tracking-tight text-slate-900 mb-6; }
+.module-content h2, .markdown-body h2 { @apply text-2xl font-bold tracking-tight text-slate-800 mb-4; }
+.module-content h3, .markdown-body h3 { @apply text-xl font-bold tracking-tight text-slate-800 mb-3; }
+
+.module-content p, .module-content div, .markdown-body p, .markdown-body div { 
+  @apply mb-4 text-base leading-relaxed;
+}
+
+.module-content b, .module-content strong, .markdown-body b, .markdown-body strong { @apply font-semibold text-slate-900; }
+.module-content u, .markdown-body u { @apply underline decoration-indigo-200 decoration-2 underline-offset-4; }
+
+.module-content blockquote, .markdown-body blockquote {
+  @apply border-l-4 border-slate-200 pl-4 italic text-slate-500 bg-slate-50 py-3 rounded-r-lg;
+}
+
+.module-content code, .markdown-body code {
+  @apply bg-slate-100 text-indigo-600 px-1.5 py-0.5 rounded text-sm font-mono font-medium;
+}
+
+.module-content ul, .markdown-body ul { @apply list-disc pl-5 mb-4 space-y-1; }
+.module-content ol, .markdown-body ol { @apply list-decimal pl-5 mb-4 space-y-1; }
+
+.module-content hr, .markdown-body hr { @apply border-t border-slate-100 my-8; }
+
+.module-content table, .markdown-body table { @apply w-full mb-6 border-collapse overflow-hidden rounded-lg border border-slate-100; }
+.module-content th, .module-content td, .markdown-body th, .markdown-body td { @apply border border-slate-50 p-3 text-sm; }
+.module-content th, .markdown-body th { @apply bg-slate-50 font-semibold text-slate-700 text-left; }
+.module-content tr:hover td, .markdown-body tr:hover td { @apply bg-slate-50/50; }
