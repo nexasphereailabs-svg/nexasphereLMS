@@ -35,21 +35,14 @@ export default function ModuleView() {
   const [markingProgress, setMarkingProgress] = useState(false);
   const [slidesLoading, setSlidesLoading] = useState(true);
   const [slidesError, setSlidesError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    // Reset slides state when moduleId or retryCount changes
+    // Reset slides state when moduleId changes
     setSlidesLoading(true);
     setSlidesError(false);
 
     // No fallback timer - keep loading until iframe onLoad fires
-  }, [moduleId, retryCount]);
-
-  const handleRetry = () => {
-    setSlidesLoading(true);
-    setSlidesError(false);
-    setRetryCount(prev => prev + 1);
-  };
+  }, [moduleId]);
 
   useEffect(() => {
     const fetchModuleData = async () => {
@@ -253,16 +246,9 @@ export default function ModuleView() {
                                ))}
                              </div>
 
-                             <div className="flex flex-col items-center gap-4">
-                               <button 
-                                 onClick={handleRetry}
-                                 className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold uppercase tracking-widest rounded-lg border border-slate-700 transition-all active:scale-95 flex items-center justify-center gap-2"
-                               >
-                                 <Loader2 className={`w-3 h-3 ${retryCount > 0 ? 'animate-spin' : ''}`} />
-                                 {retryCount > 0 ? 'Retrying...' : 'Reload Deck'}
-                               </button>
-                               <p className="text-[8px] text-slate-500 uppercase tracking-widest whitespace-nowrap opacity-60">
-                                 Check your internet or click reload if the deck fails to appear.
+                             <div className="flex flex-col items-center gap-2 pt-2">
+                               <p className="text-[9px] text-slate-500 uppercase tracking-[0.2em] font-medium opacity-70">
+                                 Please refresh the page if the presentation does not load
                                </p>
                              </div>
                            </div>
@@ -272,8 +258,8 @@ export default function ModuleView() {
                   </AnimatePresence>
 
                   <iframe 
-                    key={`${currentSection.slides_url}-${retryCount}`}
-                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(currentSection.slides_url)}&embedded=true&rv=${retryCount}`}
+                    key={currentSection.slides_url}
+                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(currentSection.slides_url)}&embedded=true`}
                     className={`w-full h-full border-none transition-opacity duration-1000 ${slidesLoading ? 'opacity-0' : 'opacity-100'}`}
                     title="Presentation Viewer"
                     onLoad={() => setSlidesLoading(false)}
@@ -283,16 +269,8 @@ export default function ModuleView() {
                     }}
                   />
                   {!slidesLoading && (
-                    <div className="absolute top-4 left-4 z-10">
-                      <a 
-                        href={currentSection.slides_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 border border-indigo-400/30"
-                      >
-                        <Layers className="w-3 h-3" />
-                        Open Fullscreen
-                      </a>
+                    <div className="absolute top-4 left-4 z-10 pointer-events-none">
+                      {/* Fullscreen button removed as requested */}
                     </div>
                   )}
                 </div>
