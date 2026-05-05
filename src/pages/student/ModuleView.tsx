@@ -368,15 +368,12 @@ export default function ModuleView() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-         <Link 
-           to="/student/my-attendance"
-           className="bg-amber-50 p-6 rounded-3xl border border-amber-200 text-amber-900 border-dashed hover:bg-amber-100 transition-colors flex items-center justify-center gap-3"
-         >
-           <Clock className="w-5 h-5 text-amber-500 animate-pulse" />
+         <div className="bg-amber-50 p-6 rounded-3xl border border-amber-200 text-amber-900 border-dashed flex items-center justify-center gap-3">
+           <Clock className="w-5 h-5 text-amber-500" />
            <span className="text-[10px] font-bold uppercase tracking-widest text-left">
-             Don't forget to mark your attendance today!
+             please make sure that you have marked the attendance in the course
            </span>
-         </Link>
+         </div>
          <div className="bg-white p-6 rounded-3xl border border-slate-200 border-dashed text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
            Module Resources Coming Soon
          </div>
