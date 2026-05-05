@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, BookOpen, Loader2, Presentation, Layers } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, BookOpen, Clock, Loader2, Presentation, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
@@ -42,16 +42,12 @@ export default function ModuleView() {
     setSlidesLoading(true);
     setSlidesError(false);
 
-    // Fallback timer: if the slide doesn't load in 8 seconds, show retry or hide loading
-    const timer = setTimeout(() => {
-      setSlidesLoading(false);
-      // We don't necessarily set error here, just allow the user to see the iframe or retry
-    }, 8000);
-
-    return () => clearTimeout(timer);
+    // No fallback timer - keep loading until iframe onLoad fires
   }, [moduleId, retryCount]);
 
   const handleRetry = () => {
+    setSlidesLoading(true);
+    setSlidesError(false);
     setRetryCount(prev => prev + 1);
   };
 
@@ -232,11 +228,11 @@ export default function ModuleView() {
                           </div>
                         </div>
                         
-                        <div className="text-center space-y-6 px-10">
+                        <div className="text-center space-y-4 px-6">
                            <div className="flex flex-col items-center justify-center gap-4">
                              <div className="flex items-center gap-3">
                                <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
-                               <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-[0.4em]">Presentation Loading</span>
+                               <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-[0.4em]">Presentation Loading</span>
                              </div>
                              
                              <div className="flex gap-1.5 justify-center">
@@ -257,12 +253,18 @@ export default function ModuleView() {
                                ))}
                              </div>
 
-                             <button 
-                               onClick={handleRetry}
-                               className="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold uppercase tracking-widest rounded-lg border border-slate-700 transition-all active:scale-95"
-                             >
-                               Reload Deck
-                             </button>
+                             <div className="flex flex-col items-center gap-4">
+                               <button 
+                                 onClick={handleRetry}
+                                 className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold uppercase tracking-widest rounded-lg border border-slate-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                               >
+                                 <Loader2 className={`w-3 h-3 ${retryCount > 0 ? 'animate-spin' : ''}`} />
+                                 {retryCount > 0 ? 'Retrying...' : 'Reload Deck'}
+                               </button>
+                               <p className="text-[8px] text-slate-500 uppercase tracking-widest whitespace-nowrap opacity-60">
+                                 Check your internet or click reload if the deck fails to appear.
+                               </p>
+                             </div>
                            </div>
                         </div>
                       </motion.div>
@@ -281,13 +283,14 @@ export default function ModuleView() {
                     }}
                   />
                   {!slidesLoading && (
-                    <div className="absolute top-4 right-4 opacity-0 group-hover/slides:opacity-100 transition-opacity">
+                    <div className="absolute top-4 left-4 z-10">
                       <a 
                         href={currentSection.slides_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="px-4 py-2 bg-slate-900/80 backdrop-blur-md text-white rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-slate-900 transition-all border border-white/10"
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 border border-indigo-400/30"
                       >
+                        <Layers className="w-3 h-3" />
                         Open Fullscreen
                       </a>
                     </div>
@@ -296,10 +299,35 @@ export default function ModuleView() {
               </div>
             )}
 
-            <div className="markdown-body text-slate-700">
+            <div className="prose prose-slate prose-indigo max-w-none px-1">
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm, remarkBreaks]} 
                 rehypePlugins={[rehypeRaw]}
+                components={{
+                  // Ensure specific elements maintain design consistency
+                  h1: ({node, ...props}) => <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-8 mt-12" {...props} />,
+                  h2: ({node, ...props}) => <h2 className="text-2xl font-bold tracking-tight text-slate-800 mb-6 mt-10" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="text-xl font-bold tracking-tight text-slate-800 mb-4 mt-8" {...props} />,
+                  p: ({node, ...props}) => <p className="text-base leading-relaxed text-slate-600 mb-6" {...props} />,
+                  ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-6 space-y-2 text-slate-600" {...props} />,
+                  ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-6 space-y-2 text-slate-600" {...props} />,
+                  li: ({node, ...props}) => <li className="pl-1" {...props} />,
+                  blockquote: ({node, ...props}) => (
+                    <blockquote className="border-l-4 border-indigo-500 pl-6 py-4 bg-indigo-50/50 rounded-r-2xl italic text-slate-700 my-8" {...props} />
+                  ),
+                  code: ({node, inline, ...props}: any) => (
+                    inline 
+                      ? <code className="bg-slate-100 text-indigo-600 px-1.5 py-0.5 rounded font-mono text-sm" {...props} />
+                      : <code className="block bg-slate-900 text-slate-100 p-6 rounded-2xl font-mono text-sm overflow-x-auto my-6" {...props} />
+                  ),
+                  table: ({node, ...props}) => (
+                    <div className="overflow-x-auto my-8 rounded-2xl border border-slate-200">
+                      <table className="w-full border-collapse" {...props} />
+                    </div>
+                  ),
+                  th: ({node, ...props}) => <th className="bg-slate-50 p-4 font-bold text-slate-900 text-left border-b border-slate-200" {...props} />,
+                  td: ({node, ...props}) => <td className="p-4 text-slate-600 border-b border-slate-100" {...props} />,
+                }}
               >
                 {currentSection.content}
               </ReactMarkdown>
@@ -361,7 +389,16 @@ export default function ModuleView() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 opacity-40 hover:opacity-100 transition-opacity">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+         <Link 
+           to="/student/my-attendance"
+           className="bg-amber-50 p-6 rounded-3xl border border-amber-200 text-amber-900 border-dashed hover:bg-amber-100 transition-colors flex items-center justify-center gap-3"
+         >
+           <Clock className="w-5 h-5 text-amber-500 animate-pulse" />
+           <span className="text-[10px] font-bold uppercase tracking-widest text-left">
+             Don't forget to mark your attendance today!
+           </span>
+         </Link>
          <div className="bg-white p-6 rounded-3xl border border-slate-200 border-dashed text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
            Module Resources Coming Soon
          </div>

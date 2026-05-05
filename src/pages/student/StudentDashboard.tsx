@@ -117,7 +117,7 @@ export default function StudentDashboard() {
       </div>
 
       <div className="space-y-6">
-        <div className="flex items-center justify-between px-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-1 gap-4">
           <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center">
               <BookOpen className="w-4.5 h-4.5" />
@@ -126,6 +126,24 @@ export default function StudentDashboard() {
           </h3>
           <Link to="/student/view-courses" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">Browse All &rarr;</Link>
         </div>
+
+        <Link 
+          to="/student/my-attendance"
+          className="block group relative overflow-hidden bg-amber-50 border border-amber-200/60 rounded-2xl p-4 transition-all hover:bg-amber-100/80 hover:border-amber-300"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-lg shadow-amber-200 animate-pulse">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-amber-900 tracking-tight">Attendance Reminder</p>
+              <p className="text-xs text-amber-700/80 mt-0.5">Please ensure you mark your attendance for today's sessions to maintain your progress record.</p>
+            </div>
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white text-[9px] font-bold uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+              Mark Now
+            </div>
+          </div>
+        </Link>
         
         {enrollments.length === 0 ? (
           <div className="py-20 bg-slate-100/50 border border-dashed border-slate-200 rounded-3xl text-center text-slate-400">

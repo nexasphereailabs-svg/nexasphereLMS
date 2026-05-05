@@ -51,6 +51,19 @@ export default function ViewCourses() {
         <p className="text-slate-500 text-sm text-left">Discover comprehensive learning pathways led by industry experts.</p>
       </div>
 
+      <Link 
+        to="/student/my-attendance"
+        className="flex items-center gap-4 bg-indigo-50 border border-indigo-100 rounded-2xl p-4 group hover:bg-indigo-100/50 transition-colors"
+      >
+        <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-100">
+          <BookOpen className="w-5 h-5" />
+        </div>
+        <div className="text-left">
+          <p className="text-sm font-bold text-indigo-900">Attendance Check</p>
+          <p className="text-xs text-indigo-600/70 font-medium">Have you marked your attendance for today? Click here to update your record.</p>
+        </div>
+      </Link>
+
       {loading ? (
         <div className="py-20 flex justify-center">
           <Loader2 className="w-10 h-10 text-indigo-600 animate-spin opacity-20" />
