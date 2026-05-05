@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { GraduationCap, Mail, Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Cpu, Mail, Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function Login() {
   const { login, error, user } = useAuth();
@@ -43,15 +43,20 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 font-sans animate-in fade-in duration-700">
       <div className="max-w-md w-full space-y-10 bg-white p-10 md:p-12 rounded-[2.5rem] border border-slate-200 shadow-sm transition-all hover:shadow-xl hover:shadow-indigo-500/5">
         <div className="text-center space-y-6">
-          <div className="mx-auto h-12 w-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-slate-200">
-            <GraduationCap className="w-6 h-6 text-indigo-400" />
+          <div className="mx-auto h-20 w-20 bg-white rounded-3xl flex items-center justify-center shadow-xl shadow-slate-200 p-2 overflow-hidden">
+            <img 
+              src="https://files.catbox.moe/n96mwl.png" 
+              alt="Nexasphere Logo" 
+              className="w-full h-full object-contain"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
               Welcome back
             </h2>
             <p className="text-sm text-slate-500 font-medium tracking-tight">
-              Sign in to your learning account
+              Sign in to your Nexasphere account
             </p>
           </div>
         </div>

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Edit, Trash2, Eye, PlusCircle, Loader2, BookOpen } from 'lucide-react';
+import { Edit, Trash2, Eye, PlusCircle, Loader2, BookOpen, ClipboardCheck } from 'lucide-react';
 import CategoryIcon from '../../components/shared/CategoryIcon';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { DeleteConfirmationModal } from '../../components/shared/DeleteConfirmationModal';
+import { deleteFilesFromUrls } from '../../lib/storage';
 
 interface Course {
   id: string;
@@ -49,13 +50,28 @@ export default function MyCourses() {
     try {
       setIsDeleting(true);
       
-      // 1. Delete module progress
+      // 0. Get modules to get slide URLs for storage cleanup
+      const { data: modulesData } = await supabase
+        .from('modules')
+        .select('slides_url')
+        .eq('course_id', courseToDelete);
+      
+      if (modulesData) {
+        const urls = modulesData.map(m => m.slides_url).filter(Boolean);
+        if (urls.length > 0) {
+          await deleteFilesFromUrls(urls, 'slides');
+        }
+      }
+
+      // 1. Delete course attendance
+      await supabase.from('course_attendance').delete().eq('course_id', courseToDelete);
+      // 2. Delete module progress
       await supabase.from('module_progress').delete().eq('course_id', courseToDelete);
-      // 2. Delete enrollments
+      // 3. Delete enrollments
       await supabase.from('enrollments').delete().eq('course_id', courseToDelete);
-      // 3. Delete modules
+      // 4. Delete modules
       await supabase.from('modules').delete().eq('course_id', courseToDelete);
-      // 4. Delete course
+      // 5. Delete course
       const { error: courseError } = await supabase
         .from('courses')
         .delete()
@@ -123,6 +139,9 @@ export default function MyCourses() {
               <div className="flex gap-2 w-full md:w-auto mt-6 md:mt-0 font-sans relative z-10 pt-6 md:pt-0 border-t md:border-t-0 border-slate-50">
                 <Link to={`/course/${course.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all font-bold text-[10px] uppercase tracking-widest border border-slate-100" title="View">
                   <Eye className="w-4 h-4" /> View
+                </Link>
+                <Link to={`/teacher/attendance/${course.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl transition-all font-bold text-[10px] uppercase tracking-widest border border-indigo-100" title="Attendance">
+                  <ClipboardCheck className="w-4 h-4" /> Attendance
                 </Link>
                 <Link to={`/teacher/edit-course/${course.id}`} className="p-3 bg-slate-50 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all border border-slate-100" title="Edit">
                   <Edit className="w-4 h-4" />

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Link } from 'react-router-dom';
 import { DeleteConfirmationModal } from '../../components/shared/DeleteConfirmationModal';
+import { deleteFilesFromUrls } from '../../lib/storage';
 
 interface TeacherProfile {
   id: string;
@@ -129,10 +130,59 @@ export default function TeacherDashboard() {
   };
 
   const performDeletion = async () => {
-    if (!itemToDelete) return;
+    if (!itemToDelete || !user) return;
     
     try {
       setIsDeleting(true);
+      
+      // Cleanup storage before deleting from DB
+      if (itemToDelete.type === 'course') {
+        const { data: modulesData } = await supabase
+          .from('modules')
+          .select('slides_url')
+          .eq('course_id', itemToDelete.id);
+        
+        if (modulesData) {
+          const urls = modulesData.map(m => m.slides_url).filter(Boolean);
+          if (urls.length > 0) {
+            await deleteFilesFromUrls(urls, 'slides');
+          }
+        }
+        
+        // Manual cleanup of related records if no CASCADE is set up (though it should be)
+        await supabase.from('course_attendance').delete().eq('course_id', itemToDelete.id);
+        await supabase.from('module_progress').delete().eq('course_id', itemToDelete.id);
+        await supabase.from('enrollments').delete().eq('course_id', itemToDelete.id);
+        await supabase.from('modules').delete().eq('course_id', itemToDelete.id);
+      } else if (itemToDelete.type === 'profile') {
+        // Find all courses for this profile
+        const { data: courses } = await supabase
+          .from('courses')
+          .select('id')
+          .eq('profile_id', itemToDelete.id);
+        
+        const courseIds = courses?.map(c => c.id) || [];
+        if (courseIds.length > 0) {
+          const { data: modulesData } = await supabase
+            .from('modules')
+            .select('slides_url')
+            .in('course_id', courseIds);
+          
+          if (modulesData) {
+            const urls = modulesData.map(m => m.slides_url).filter(Boolean);
+            if (urls.length > 0) {
+              await deleteFilesFromUrls(urls, 'slides');
+            }
+          }
+          
+          await supabase.from('course_attendance').delete().in('course_id', courseIds);
+          await supabase.from('module_progress').delete().in('course_id', courseIds);
+          await supabase.from('enrollments').delete().in('course_id', courseIds);
+          await supabase.from('modules').delete().in('course_id', courseIds);
+          await supabase.from('courses').delete().in('id', courseIds);
+        }
+      }
+
       const table = itemToDelete.type === 'profile' ? 'teacher_profiles' : 'courses';
       
       const { error } = await supabase

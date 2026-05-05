@@ -14,8 +14,8 @@ export default function DashboardLayout() {
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
       <Navbar onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className="flex">
-        {!isAdmin && <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
-        <main className={isAdmin ? 'flex-1 p-6 md:p-10' : 'flex-1 p-6 md:p-10 overflow-hidden'}>
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <main className="flex-1 p-6 md:p-10 overflow-hidden">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -28,7 +28,7 @@ export default function DashboardLayout() {
       
       {/* Mobile Overlay */}
       <AnimatePresence>
-        {isSidebarOpen && !isAdmin && (
+        {isSidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

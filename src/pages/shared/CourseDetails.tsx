@@ -4,6 +4,7 @@ import { BookOpen, Star, MonitorPlay, CheckCircle2, ArrowLeft, Bookmark, Share2,
 import CategoryIcon from '../../components/shared/CategoryIcon';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { trackCourseAttendance, checkTodayAttendance } from '../../lib/attendance';
 
 interface Section {
   id: string;
@@ -35,6 +36,8 @@ export default function CourseDetails() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [completions, setCompletions] = useState<string[]>([]);
+  const [attendanceMarked, setAttendanceMarked] = useState(false);
+  const [markingAttendance, setMarkingAttendance] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -63,6 +66,18 @@ export default function CourseDetails() {
         setCourse(courseData);
 
         if (user) {
+          const checkStatus = async () => {
+            if (user.role === 'student' && courseId) {
+              const marked = await checkTodayAttendance(user.id, courseId);
+              setAttendanceMarked(marked);
+            }
+          };
+
+          await checkStatus();
+
+          // Re-check status every minute to handle state reset if date rolls over to midnight
+          const interval = setInterval(checkStatus, 60000);
+
           const { data: enrollment } = await supabase
             .from('enrollments')
             .select('*')
@@ -80,6 +95,8 @@ export default function CourseDetails() {
             
             setCompletions(progress?.map(p => p.module_id) || []);
           }
+
+          return () => clearInterval(interval);
         }
       } catch (err) {
         console.error('Error fetching course:', err);
@@ -112,6 +129,22 @@ export default function CourseDetails() {
       console.error('Enrollment failed:', err);
     } finally {
       setEnrolling(false);
+    }
+  };
+
+  const handleMarkAttendance = async () => {
+    if (!user || !courseId || markingAttendance || attendanceMarked) return;
+
+    try {
+      setMarkingAttendance(true);
+      const result = await trackCourseAttendance(user.id, courseId);
+      if (result.success) {
+        setAttendanceMarked(true);
+      }
+    } catch (err) {
+      console.error('Failed to mark attendance:', err);
+    } finally {
+      setMarkingAttendance(false);
     }
   };
 
@@ -204,6 +237,36 @@ export default function CourseDetails() {
                 </div>
               )}
             </div>
+
+            {isEnrolled && (
+              <div className="flex flex-wrap items-center justify-between gap-6 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                <div className="space-y-1">
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Attendance Status</h4>
+                  <div className="flex items-center gap-2">
+                    {attendanceMarked ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        <span className="text-sm font-bold text-slate-900">Marked as Present for Today</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                        <span className="text-sm font-bold text-slate-900">Not Marked Yet</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                {!attendanceMarked && (
+                  <button 
+                    onClick={handleMarkAttendance}
+                    disabled={markingAttendance}
+                    className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-md active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {markingAttendance ? 'Marking...' : 'Mark Attendance'}
+                  </button>
+                )}
+              </div>
+            )}
 
             {isEnrolled && (
               <div className="space-y-3">

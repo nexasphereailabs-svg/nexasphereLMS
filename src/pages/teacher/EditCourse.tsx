@@ -5,6 +5,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import ReactQuill from 'react-quill-new';
 import { supabase } from '../../lib/supabase';
 import { DeleteConfirmationModal } from '../../components/shared/DeleteConfirmationModal';
+import { deleteFilesFromUrls, getStoragePathFromUrl } from '../../lib/storage';
 import TurndownService from 'turndown';
 import showdown from 'showdown';
 
@@ -169,6 +170,18 @@ export default function EditCourse() {
     try {
       if (isStored) {
         setIsDeletingModule(true);
+        
+        // Fetch module to get slides_url
+        const { data: modData } = await supabase
+          .from('modules')
+          .select('slides_url')
+          .eq('id', moduleToDelete)
+          .single();
+
+        if (modData?.slides_url) {
+          await deleteFilesFromUrls([modData.slides_url], 'slides');
+        }
+
         const { error } = await supabase
           .from('modules')
           .delete()
@@ -189,11 +202,27 @@ export default function EditCourse() {
     if (!user || !courseId) return;
     try {
       setIsDeletingCourse(true);
-      // 1. Delete progress
+
+      // 0. Get modules to get slide URLs for storage cleanup
+      const { data: modulesData } = await supabase
+        .from('modules')
+        .select('slides_url')
+        .eq('course_id', courseId);
+      
+      if (modulesData) {
+        const urls = modulesData.map(m => m.slides_url).filter(Boolean);
+        if (urls.length > 0) {
+          await deleteFilesFromUrls(urls, 'slides');
+        }
+      }
+
+      // 1. Delete course attendance
+      await supabase.from('course_attendance').delete().eq('course_id', courseId);
+      // 2. Delete progress
       await supabase.from('module_progress').delete().eq('course_id', courseId);
-      // 2. Delete enrollments
+      // 3. Delete enrollments
       await supabase.from('enrollments').delete().eq('course_id', courseId);
-      // 3. Delete modules
+      // 4. Delete modules
       const { error: modErr } = await supabase.from('modules').delete().eq('course_id', courseId);
       if (modErr) throw modErr;
 
@@ -281,6 +310,21 @@ export default function EditCourse() {
         .eq('teacher_id', user.id);
 
       if (courseError) throw courseError;
+
+      // STORAGE CLEANUP: Find modules being removed or whose slide URLs are changing
+      const { data: existingModules } = await supabase
+        .from('modules')
+        .select('slides_url')
+        .eq('course_id', courseId);
+      
+      if (existingModules) {
+        const existingUrls = existingModules.map(m => m.slides_url).filter(Boolean);
+        const newUrls = sectionsWithSlides.map(s => s.slides_url).filter(Boolean);
+        const urlsToDelete = existingUrls.filter(url => !newUrls.includes(url));
+        if (urlsToDelete.length > 0) {
+          await deleteFilesFromUrls(urlsToDelete, 'slides');
+        }
+      }
 
       const { error: deleteError } = await supabase.from('modules').delete().eq('course_id', courseId);
       if (deleteError) throw deleteError;

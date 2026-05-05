@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { DeleteConfirmationModal } from '../../components/shared/DeleteConfirmationModal';
+import { deleteFilesFromUrls } from '../../lib/storage';
 
 interface TeacherProfile {
   id: string;
@@ -58,13 +59,28 @@ export default function MyProfiles() {
       const courseIds = coursesToDelete?.map(c => c.id) || [];
 
       if (courseIds.length > 0) {
-        // 2. Delete progress
+        // 2. Get all modules for these courses to cleanup storage
+        const { data: modulesData } = await supabase
+          .from('modules')
+          .select('slides_url')
+          .in('course_id', courseIds);
+
+        if (modulesData) {
+          const urls = modulesData.map(m => m.slides_url).filter(Boolean);
+          if (urls.length > 0) {
+            await deleteFilesFromUrls(urls, 'slides');
+          }
+        }
+
+        // 3. Delete attendance
+        await supabase.from('course_attendance').delete().in('course_id', courseIds);
+        // 4. Delete progress
         await supabase.from('module_progress').delete().in('course_id', courseIds);
-        // 3. Delete enrollments
+        // 5. Delete enrollments
         await supabase.from('enrollments').delete().in('course_id', courseIds);
-        // 4. Delete modules
+        // 6. Delete modules
         await supabase.from('modules').delete().in('course_id', courseIds);
-        // 5. Delete courses
+        // 7. Delete courses
         await supabase.from('courses').delete().in('id', courseIds).eq('teacher_id', user.id);
       }
 

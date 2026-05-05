@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, BookOpen, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, BookOpen, Loader2, Presentation, Layers } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import ReactMarkdown from 'react-markdown';
@@ -32,6 +33,27 @@ export default function ModuleView() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [completionCount, setCompletionCount] = useState(0);
   const [markingProgress, setMarkingProgress] = useState(false);
+  const [slidesLoading, setSlidesLoading] = useState(true);
+  const [slidesError, setSlidesError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    // Reset slides state when moduleId or retryCount changes
+    setSlidesLoading(true);
+    setSlidesError(false);
+
+    // Fallback timer: if the slide doesn't load in 8 seconds, show retry or hide loading
+    const timer = setTimeout(() => {
+      setSlidesLoading(false);
+      // We don't necessarily set error here, just allow the user to see the iframe or retry
+    }, 8000);
+
+    return () => clearTimeout(timer);
+  }, [moduleId, retryCount]);
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
 
   useEffect(() => {
     const fetchModuleData = async () => {
@@ -185,21 +207,91 @@ export default function ModuleView() {
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Presentation Deck</span>
                 </div>
                 <div className="aspect-video w-full bg-slate-950 rounded-[2rem] overflow-hidden shadow-2xl border border-slate-200 relative group/slides">
+                  <AnimatePresence>
+                    {slidesLoading && (
+                      <motion.div 
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-20 bg-slate-900 flex flex-col items-center justify-center space-y-6"
+                      >
+                        <div className="relative">
+                          <motion.div 
+                            animate={{ 
+                              scale: [1, 1.2, 1],
+                              opacity: [0.3, 0.6, 0.3]
+                            }}
+                            transition={{ 
+                              duration: 3, 
+                              repeat: Infinity, 
+                              ease: "easeInOut" 
+                            }}
+                            className="absolute inset-0 bg-indigo-500 rounded-full blur-3xl"
+                          />
+                          <div className="relative bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl">
+                             <Layers className="w-10 h-10 text-indigo-400 animate-pulse" />
+                          </div>
+                        </div>
+                        
+                        <div className="text-center space-y-6 px-10">
+                           <div className="flex flex-col items-center justify-center gap-4">
+                             <div className="flex items-center gap-3">
+                               <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
+                               <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-[0.4em]">Presentation Loading</span>
+                             </div>
+                             
+                             <div className="flex gap-1.5 justify-center">
+                               {[0, 1, 2, 3, 4].map((i) => (
+                                 <motion.div
+                                   key={i}
+                                   animate={{ 
+                                     scaleY: [1, 2, 1],
+                                     opacity: [0.3, 1, 0.3]
+                                   }}
+                                   transition={{ 
+                                     duration: 1, 
+                                     repeat: Infinity, 
+                                     delay: i * 0.15 
+                                   }}
+                                   className="w-1 h-3 bg-indigo-500/50 rounded-full"
+                                 />
+                               ))}
+                             </div>
+
+                             <button 
+                               onClick={handleRetry}
+                               className="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold uppercase tracking-widest rounded-lg border border-slate-700 transition-all active:scale-95"
+                             >
+                               Reload Deck
+                             </button>
+                           </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <iframe 
-                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(currentSection.slides_url)}&embedded=true`}
-                    className="w-full h-full border-none"
+                    key={`${currentSection.slides_url}-${retryCount}`}
+                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(currentSection.slides_url)}&embedded=true&rv=${retryCount}`}
+                    className={`w-full h-full border-none transition-opacity duration-1000 ${slidesLoading ? 'opacity-0' : 'opacity-100'}`}
                     title="Presentation Viewer"
+                    onLoad={() => setSlidesLoading(false)}
+                    onError={() => {
+                      setSlidesLoading(false);
+                      setSlidesError(true);
+                    }}
                   />
-                  <div className="absolute top-4 right-4 opacity-0 group-hover/slides:opacity-100 transition-opacity">
-                    <a 
-                      href={currentSection.slides_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 bg-slate-900/80 backdrop-blur-md text-white rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-slate-900 transition-all border border-white/10"
-                    >
-                      Open Fullscreen
-                    </a>
-                  </div>
+                  {!slidesLoading && (
+                    <div className="absolute top-4 right-4 opacity-0 group-hover/slides:opacity-100 transition-opacity">
+                      <a 
+                        href={currentSection.slides_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-slate-900/80 backdrop-blur-md text-white rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-slate-900 transition-all border border-white/10"
+                      >
+                        Open Fullscreen
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

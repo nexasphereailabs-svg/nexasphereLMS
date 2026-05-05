@@ -8,7 +8,8 @@ import {
   Search, 
   BookOpen,
   Shield,
-  X
+  X,
+  CalendarDays
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -24,6 +25,7 @@ const studentLinks = [
   { name: 'Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
   { name: 'Browse Subjects', path: '/student/browse-profiles', icon: Search },
   { name: 'My Courses', path: '/student/view-courses', icon: BookOpen },
+  { name: 'My Attendance', path: '/student/my-attendance', icon: CalendarDays },
 ];
 
 const adminLinks = [
@@ -47,7 +49,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <aside className={cn(
-      "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:h-[calc(100vh-64px)] md:bg-white",
+      "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out md:sticky md:top-16 md:translate-x-0 md:h-[calc(100vh-64px)] md:bg-white",
       isOpen ? "translate-x-0" : "-translate-x-full"
     )}>
       <div className="flex flex-col h-full">
@@ -75,7 +77,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     : "text-slate-600 hover:bg-slate-50 hover:text-indigo-600"
                 )}
               >
-                <Icon className={cn("w-4.5 h-4.5 transition-colors", isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500')} />
+                <Icon className={cn("w-5 h-5 transition-colors", isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500')} />
                 {link.name}
               </Link>
             );

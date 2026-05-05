@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, GraduationCap, Menu } from 'lucide-react';
+import { LogOut, User, Cpu, Menu } from 'lucide-react';
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -12,7 +12,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   return (
     <nav className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 shadow-sm shadow-slate-100/50">
       <div className="flex items-center gap-3 md:gap-4">
-        {isAuthenticated && user?.role !== 'admin' && (
+        {isAuthenticated && (
           <button 
             onClick={onMenuClick}
             className="p-2 hover:bg-slate-50 rounded-lg md:hidden text-slate-600 transition-colors"
@@ -21,11 +21,16 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           </button>
         )}
         <Link to="/" className="flex items-center gap-2.5 font-bold text-xl text-indigo-600 group">
-          <div className="p-1.5 bg-indigo-50 rounded-lg group-hover:bg-indigo-100 transition-colors">
-            <GraduationCap className="w-7 h-7" />
+          <div className="p-1 bg-white rounded-lg group-hover:bg-indigo-50 transition-colors">
+            <img 
+              src="https://files.catbox.moe/n96mwl.png" 
+              alt="Logo" 
+              className="w-10 h-10 object-contain"
+              referrerPolicy="no-referrer"
+            />
           </div>
-          <span className="hidden sm:inline tracking-tight text-slate-900">EduPlatform</span>
-          <span className="sm:hidden text-slate-900">EP</span>
+          <span className="hidden sm:inline tracking-tight text-slate-900">Nexasphere AI Labs</span>
+          <span className="sm:hidden text-slate-900">Nexasphere</span>
         </Link>
       </div>
 
@@ -51,14 +56,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           </div>
         ) : (
           <div className="flex items-center gap-3 sm:gap-6">
-            <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">
-              Log In
-            </Link>
             <Link
-              to="/register"
-              className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+              to="/login"
+              className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-900 transition-all shadow-md shadow-indigo-100"
             >
-              Get Started
+              Sign In
             </Link>
           </div>
         ) }
