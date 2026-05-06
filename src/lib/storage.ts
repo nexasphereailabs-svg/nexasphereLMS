@@ -63,8 +63,37 @@ export const deleteFilesFromUrls = async (urls: (string | null | undefined)[], b
   if (error) {
     console.error(`Error deleting files from ${bucketName}:`, error);
   } else {
-    console.log(`Successfully deleted files from ${bucketName}:`, data);
+    console.log(`Successfully cleaned storage bucket "${bucketName}":`, data);
   }
   
   return { data, error };
 };
+
+/**
+ * Specifically cleans up module presentations when a course or profile is deleted.
+ */
+export async function cleanupModulePresentations(courseIds: string[]) {
+  if (!courseIds || courseIds.length === 0) return;
+  
+  try {
+    const { data: modules, error } = await supabase
+      .from('modules')
+      .select('slides_url')
+      .in('course_id', courseIds);
+
+    if (error) {
+      console.error('Error fetching modules for storage cleanup:', error);
+      return;
+    }
+
+    if (modules && modules.length > 0) {
+      const urls = modules.map(m => m.slides_url).filter(Boolean);
+      if (urls.length > 0) {
+        console.log(`Cleaning up ${urls.length} presentations for courses:`, courseIds);
+        await deleteFilesFromUrls(urls, 'slides');
+      }
+    }
+  } catch (err) {
+    console.error('Critical failure in module presentation cleanup:', err);
+  }
+}
