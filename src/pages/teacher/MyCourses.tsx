@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { DeleteConfirmationModal } from '../../components/shared/DeleteConfirmationModal';
-import { deleteFilesFromUrls, cleanupModulePresentations } from '../../lib/storage';
+import { deleteFilesFromUrls } from '../../lib/storage';
 
 interface Course {
   id: string;
@@ -50,18 +50,35 @@ export default function MyCourses() {
     try {
       setIsDeleting(true);
       
-      // Cleanup storage slides
-      await cleanupModulePresentations([courseToDelete]);
-
-      // Cleanup related records in parallel for speed
-      await Promise.all([
-        supabase.from('course_attendance').delete().eq('course_id', courseToDelete),
-        supabase.from('module_progress').delete().eq('course_id', courseToDelete),
-        supabase.from('enrollments').delete().eq('course_id', courseToDelete),
-        supabase.from('modules').delete().eq('course_id', courseToDelete),
-        supabase.from('courses').delete().eq('id', courseToDelete).eq('teacher_id', user.id)
-      ]);
+      // 0. Get modules to get slide URLs for storage cleanup
+      const { data: modulesData } = await supabase
+        .from('modules')
+        .select('slides_url')
+        .eq('course_id', courseToDelete);
       
+      if (modulesData) {
+        const urls = modulesData.map(m => m.slides_url).filter(Boolean);
+        if (urls.length > 0) {
+          await deleteFilesFromUrls(urls, 'slides');
+        }
+      }
+
+      // 1. Delete course attendance
+      await supabase.from('course_attendance').delete().eq('course_id', courseToDelete);
+      // 2. Delete module progress
+      await supabase.from('module_progress').delete().eq('course_id', courseToDelete);
+      // 3. Delete enrollments
+      await supabase.from('enrollments').delete().eq('course_id', courseToDelete);
+      // 4. Delete modules
+      await supabase.from('modules').delete().eq('course_id', courseToDelete);
+      // 5. Delete course
+      const { error: courseError } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', courseToDelete)
+        .eq('teacher_id', user.id);
+      
+      if (courseError) throw courseError;
       setCourses(courses.filter(c => c.id !== courseToDelete));
       setCourseToDelete(null);
     } catch (err: any) {
