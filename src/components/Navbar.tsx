@@ -23,7 +23,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         <Link to="/" className="flex items-center gap-2.5 font-bold text-xl text-indigo-600 group">
           <div className="p-1 bg-white rounded-lg group-hover:bg-indigo-50 transition-colors">
             <img 
-              src="https://files.catbox.moe/n96mwl.png" 
+              src="https://trpzsatfjbludokxelfh.supabase.co/storage/v1/object/public/LOGO/WhatsApp_Image_2026-04-25_at_23.22.39-removebg-preview.png" 
               alt="Logo" 
               className="w-10 h-10 object-contain"
               referrerPolicy="no-referrer"

@@ -45,7 +45,7 @@ export default function Login() {
         <div className="text-center space-y-6">
           <div className="mx-auto h-20 w-20 bg-white rounded-3xl flex items-center justify-center shadow-xl shadow-slate-200 p-2 overflow-hidden">
             <img 
-              src="https://files.catbox.moe/n96mwl.png" 
+              src="https://trpzsatfjbludokxelfh.supabase.co/storage/v1/object/public/LOGO/WhatsApp_Image_2026-04-25_at_23.22.39-removebg-preview.png" 
               alt="Nexasphere Logo" 
               className="w-full h-full object-contain"
               referrerPolicy="no-referrer"
