@@ -107,12 +107,6 @@ export default function AttendanceReport() {
     
     if (record) return record.status;
     
-    const cellDate = new Date(selectedYear, selectedMonth, day);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (cellDate <= today) return 'absent';
-    
     return undefined;
   };
 
@@ -126,9 +120,8 @@ export default function AttendanceReport() {
 
   if (loading) return <div className="py-40 flex justify-center"><Loader2 className="w-10 h-10 animate-spin text-indigo-600 opacity-20" /></div>;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const relevantDays = daysArray.filter(day => new Date(selectedYear, selectedMonth, day) <= today).length;
+  // Calculate unique days where attendance was taken for this course in this month
+  const attendanceSessions = Array.from(new Set(records.map(r => r.attendance_date))).length;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 font-sans pb-10">
@@ -180,7 +173,7 @@ export default function AttendanceReport() {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100">
                 <th className="p-6 font-bold text-xs uppercase tracking-widest text-slate-400 sticky left-0 bg-slate-50 z-20 w-64 border-r border-slate-100">
-                  Student Identity
+                  DAYS
                 </th>
                 {daysArray.map(day => (
                   <th key={day} className="p-3 text-center font-bold text-[10px] text-slate-400 border-r border-slate-100 min-w-[40px]">
@@ -196,7 +189,7 @@ export default function AttendanceReport() {
               {students.map(student => {
                 const studentRecords = records.filter(r => r.student_id === student.id);
                 const totalPresence = studentRecords.filter(r => r.status === 'present').length;
-                const percentage = relevantDays > 0 ? Math.round((totalPresence / relevantDays) * 100) : 0;
+                const percentage = attendanceSessions > 0 ? Math.round((totalPresence / attendanceSessions) * 100) : 0;
 
                 return (
                   <tr key={student.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
