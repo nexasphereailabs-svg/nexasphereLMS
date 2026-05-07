@@ -94,33 +94,26 @@ export default function ModuleView() {
     fetchModuleData();
   }, [courseId, moduleId, user]);
 
-  const toggleCompletion = async () => {
-    if (!user || !moduleId) return;
+  const markAsComplete = async () => {
+    if (!user || !moduleId || isCompleted) return;
 
     try {
       setMarkingProgress(true);
-      if (isCompleted) {
-        await supabase
-          .from('module_progress')
-          .delete()
-          .eq('module_id', moduleId)
-          .eq('student_id', user.id);
-        setIsCompleted(false);
-        setCompletionCount(prev => Math.max(0, prev - 1));
-      } else {
-        await supabase
-          .from('module_progress')
-          .insert({
-            student_id: user.id,
-            course_id: courseId,
-            module_id: moduleId,
-            is_completed: true
-          });
-        setIsCompleted(true);
-        setCompletionCount(prev => prev + 1);
-      }
+      const { error } = await supabase
+        .from('module_progress')
+        .upsert({
+          student_id: user.id,
+          course_id: courseId,
+          module_id: moduleId,
+          is_completed: true
+        }, { onConflict: 'student_id, module_id' });
+      
+      if (error) throw error;
+
+      setIsCompleted(true);
+      setCompletionCount(prev => prev + 1);
     } catch (err) {
-      console.error('Failed to update progress:', err);
+      console.error('Failed to mark as complete:', err);
     } finally {
       setMarkingProgress(false);
     }
@@ -158,18 +151,6 @@ export default function ModuleView() {
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Exit Module
           </button>
           <div className="flex flex-wrap items-center gap-3">
-            <button 
-              onClick={toggleCompletion}
-              disabled={markingProgress}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all text-[10px] font-bold uppercase tracking-widest border ${
-                isCompleted 
-                  ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm' 
-                  : 'bg-white text-slate-400 border-slate-200 hover:border-indigo-600 hover:text-indigo-600'
-              }`}
-            >
-              <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-emerald-500' : 'text-slate-300 group-hover:text-indigo-500'}`} />
-              {isCompleted ? 'Marked Completed' : 'Mark as Complete'}
-            </button>
             <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl">
                <BookOpen className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 truncate max-w-[150px] md:max-w-none" title={course.title}>Path: {course.title}</span>
@@ -328,16 +309,20 @@ export default function ModuleView() {
               )}
 
               {nextSection ? (
-                <Link 
-                  to={`/course/${courseId}/module/${nextSection.id}`}
-                  className="flex items-center justify-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl hover:bg-slate-900 transition-all font-bold text-[10px] uppercase tracking-widest group shadow-lg shadow-indigo-100 active:scale-95"
+                <button 
+                  onClick={async () => {
+                    if (!isCompleted) await markAsComplete();
+                    navigate(`/course/${courseId}/module/${nextSection.id}`);
+                  }}
+                  disabled={markingProgress}
+                  className="flex items-center justify-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl hover:bg-slate-900 transition-all font-bold text-[10px] uppercase tracking-widest group shadow-lg shadow-indigo-100 active:scale-95 disabled:opacity-50"
                 >
                   Next Module <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                </button>
               ) : (
                 <button 
                   onClick={async () => {
-                    if (!isCompleted) await toggleCompletion();
+                    if (!isCompleted) await markAsComplete();
                     navigate(`/course/${courseId}`);
                   }}
                   disabled={markingProgress}
