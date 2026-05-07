@@ -367,18 +367,12 @@ export default function ModuleView() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+      <div className="max-w-xl mx-auto mt-8">
          <div className="bg-amber-50 p-6 rounded-3xl border border-amber-200 text-amber-900 border-dashed flex items-center justify-center gap-3">
            <Clock className="w-5 h-5 text-amber-500" />
            <span className="text-[10px] font-bold uppercase tracking-widest text-left">
              please make sure that you have marked the attendance in the course
            </span>
-         </div>
-         <div className="bg-white p-6 rounded-3xl border border-slate-200 border-dashed text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-           Module Resources Coming Soon
-         </div>
-         <div className="bg-white p-6 rounded-3xl border border-slate-200 border-dashed text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-           Community Discussion Coming Soon
          </div>
       </div>
     </div>
