@@ -107,6 +107,20 @@ export default function AttendanceReport() {
     
     if (record) return record.status;
     
+    // Mark absent if no record exists between course creation date and today
+    const cellDate = new Date(selectedYear, selectedMonth, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (course?.created_at) {
+      const creationDate = new Date(course.created_at);
+      creationDate.setHours(0, 0, 0, 0);
+      
+      if (cellDate >= creationDate && cellDate <= today) {
+        return 'absent';
+      }
+    }
+    
     return undefined;
   };
 
@@ -118,10 +132,57 @@ export default function AttendanceReport() {
     }
   };
 
+  const downloadCSV = () => {
+    const headers = ['Student Name', 'Email', ...daysArray.map(d => `Day ${d}`), 'Attendance %'];
+    
+    const rows = students.map(student => {
+      const studentRecords = records.filter(r => r.student_id === student.id);
+      const totalPresence = studentRecords.filter(r => r.status === 'present').length;
+      const percentage = attendanceSessions > 0 ? Math.round((totalPresence / attendanceSessions) * 100) : 0;
+      
+      const dayStatuses = daysArray.map(day => {
+        const status = getStatus(student.id, day);
+        return status || '-';
+      });
+      
+      return [
+        student.full_name,
+        student.email,
+        ...dayStatuses,
+        `${percentage}%`
+      ];
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const fileName = `Attendance_${course?.title?.replace(/[^a-z0-9]/gi, '_') || 'Report'}_${months[selectedMonth]}_${selectedYear}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) return <div className="py-40 flex justify-center"><Loader2 className="w-10 h-10 animate-spin text-indigo-600 opacity-20" /></div>;
 
-  // Calculate unique days where attendance was taken for this course in this month
-  const attendanceSessions = Array.from(new Set(records.map(r => r.attendance_date))).length;
+  // Calculate days in month that are between course creation and today
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const creationDate = course?.created_at ? new Date(course.created_at) : null;
+  if (creationDate) creationDate.setHours(0, 0, 0, 0);
+
+  const attendanceSessions = daysArray.filter(day => {
+    const cellDate = new Date(selectedYear, selectedMonth, day);
+    return creationDate && cellDate >= creationDate && cellDate <= today;
+  }).length;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 font-sans pb-10">
@@ -161,7 +222,10 @@ export default function AttendanceReport() {
               ))}
             </select>
           </div>
-          <button className="p-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95">
+          <button 
+            onClick={downloadCSV}
+            className="p-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95"
+          >
             <Download className="w-4 h-4" />
           </button>
         </div>

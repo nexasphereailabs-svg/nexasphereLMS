@@ -112,7 +112,8 @@ export default function MarkAttendance() {
     }
   };
 
-  const handleStatusChange = (studentId: string, status: 'present' | 'absent') => {
+  const handleStatusChange = async (studentId: string, status: 'present' | 'absent') => {
+    // Update local state first for instant feedback
     setAttendance(prev => ({
       ...prev,
       [studentId]: {
@@ -120,6 +121,27 @@ export default function MarkAttendance() {
         status
       }
     }));
+
+    // Auto-save to database
+    if (!user || !courseId) return;
+
+    try {
+      const { error } = await supabase
+        .from('course_attendance')
+        .upsert({
+          course_id: courseId,
+          student_id: studentId,
+          attendance_date: date,
+          status: status,
+          notes: attendance[studentId]?.notes || '',
+          marked_by: user.id
+        }, { onConflict: 'course_id, student_id, attendance_date' });
+
+      if (error) throw error;
+    } catch (err: any) {
+      console.error('Error auto-saving attendance:', err);
+      setMessage({ type: 'error', text: 'Failed to auto-save attendance.' });
+    }
   };
 
   const saveAttendance = async () => {
@@ -263,14 +285,12 @@ export default function MarkAttendance() {
               </div>
             </div>
 
-            <button
-              onClick={saveAttendance}
-              disabled={saving || students.length === 0}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/20 active:scale-95"
+            <Link
+              to={`/teacher/attendance-report/${courseId}`}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 transition-all py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/20 active:scale-95"
             >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              Submit Register
-            </button>
+              View Monthly Report
+            </Link>
           </div>
 
           <AnimatePresence>
@@ -290,13 +310,6 @@ export default function MarkAttendance() {
               </motion.div>
             )}
           </AnimatePresence>
-
-          <Link
-            to={`/teacher/attendance-report/${courseId}`}
-            className="block w-full text-center py-4 rounded-xl font-bold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border border-slate-100 transition-all uppercase tracking-widest text-[10px]"
-          >
-            View Monthly Report &rarr;
-          </Link>
         </div>
       </div>
     </div>

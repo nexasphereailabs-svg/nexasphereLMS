@@ -150,32 +150,32 @@ export default function ModuleView() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 text-left font-sans pb-24 px-4 md:px-6 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <button 
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors group w-fit"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Exit Module
-        </button>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-6">
           <button 
-            onClick={toggleCompletion}
-            disabled={markingProgress}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all text-[10px] font-bold uppercase tracking-widest border ${
-              isCompleted 
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm' 
-                : 'bg-white text-slate-400 border-slate-200 hover:border-indigo-600 hover:text-indigo-600'
-            }`}
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors group w-fit"
           >
-            <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-emerald-500' : 'text-slate-300 group-hover:text-indigo-500'}`} />
-            {isCompleted ? 'Marked Completed' : 'Mark as Complete'}
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Exit Module
           </button>
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl max-w-[200px] md:max-w-none">
-             <BookOpen className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 truncate" title={course.title}>Path: {course.title}</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <button 
+              onClick={toggleCompletion}
+              disabled={markingProgress}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all text-[10px] font-bold uppercase tracking-widest border ${
+                isCompleted 
+                  ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm' 
+                  : 'bg-white text-slate-400 border-slate-200 hover:border-indigo-600 hover:text-indigo-600'
+              }`}
+            >
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-emerald-500' : 'text-slate-300 group-hover:text-indigo-500'}`} />
+              {isCompleted ? 'Marked Completed' : 'Mark as Complete'}
+            </button>
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+               <BookOpen className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 truncate max-w-[150px] md:max-w-none" title={course.title}>Path: {course.title}</span>
+            </div>
           </div>
         </div>
-      </div>
 
       <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
         <div className="bg-slate-900 p-8 md:p-14 text-white relative overflow-hidden group">
@@ -188,14 +188,14 @@ export default function ModuleView() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 rounded-full translate-x-24 -translate-y-24 blur-3xl group-hover:scale-110 transition-transform duration-1000" />
         </div>
 
-        <div className="p-6 md:p-14 space-y-12">
+        <div className="px-2 py-8 md:p-14 space-y-12">
           <div className="module-content w-full overflow-x-hidden space-y-10 md:space-y-16">
             {currentSection.slides_url && (
               <div className="space-y-4">
-                <div className="flex items-center gap-3 px-1">
+                <div className="hidden md:flex items-center gap-3 px-1">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Presentation Deck</span>
                 </div>
-                <div className="aspect-video w-full bg-slate-950 rounded-[2rem] overflow-hidden shadow-2xl border border-slate-200 relative group/slides">
+                <div className="h-[400px] md:h-auto md:aspect-video w-full bg-slate-950 rounded-xl md:rounded-[2rem] overflow-auto md:overflow-hidden shadow-2xl border border-slate-200 relative group/slides">
                   <AnimatePresence>
                     {slidesLoading && (
                       <motion.div 

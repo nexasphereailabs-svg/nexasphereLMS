@@ -52,7 +52,7 @@ export default function StudentAttendanceDetail() {
       // 2. Fetch Course Info
       const { data: courseData } = await supabase
         .from('courses')
-        .select('title')
+        .select('title, created_at')
         .eq('id', courseId)
         .single();
       setCourse(courseData);
@@ -73,19 +73,34 @@ export default function StudentAttendanceDetail() {
     }
   };
 
-  // Calculate stats based on elapsed days in the current year or since enrollment
-  // For simplicity, we'll use the count of unique days in the current year up to today
-  // or just count the unique days present/absent in the record set.
-  // Actually, to align with the report, we'll use the records we have but explain that
-  // missing days from the report period are considered absences.
-  const stats = {
-    present: records.filter(r => r.status === 'present').length,
-    absent: records.filter(r => r.status === 'absent').length,
-    total: records.length,
-    percentage: records.length > 0 
-      ? Math.round((records.filter(r => r.status === 'present').length / records.length) * 100) 
-      : 0
+  // Calculate stats based on days since course creation
+  const calculateStats = () => {
+    if (!course?.created_at) return { present: 0, absent: 0, total: 0, percentage: 0 };
+    
+    const creationDate = new Date(course.created_at);
+    creationDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // total days from creation to today
+    const diffTime = Math.max(0, today.getTime() - creationDate.getTime());
+    const totalDaysSinceCreation = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    
+    const presentCount = records.filter(r => r.status === 'present').length;
+    // Any day that doesn't have a 'present' record is effectively an absence since creation
+    const absentCount = Math.max(0, totalDaysSinceCreation - presentCount);
+    
+    return {
+      present: presentCount,
+      absent: absentCount,
+      total: totalDaysSinceCreation,
+      percentage: totalDaysSinceCreation > 0 
+        ? Math.round((presentCount / totalDaysSinceCreation) * 100) 
+        : 0
+    };
   };
+
+  const stats = calculateStats();
 
   if (loading) return <div className="py-40 flex justify-center"><Loader2 className="w-10 h-10 animate-spin text-indigo-600 opacity-20" /></div>;
 
